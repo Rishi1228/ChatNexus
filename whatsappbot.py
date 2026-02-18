@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import google.generativeai as genai
 
 REPLY_LOG_FILE = "reply_log.json"
-GOOGLE_API_KEY = "AIzaSyB7FYh9SnzpcuzJ-cwNRBXBpzVekptL2zw"
+GOOGLE_API_KEY = ""
 
 def choose_profile_path():
     print("Which WhatsApp account do you want to use?")
@@ -264,4 +264,5 @@ if __name__ == "__main__":
     all_rates = collect_all_rates(driver, recieves)
     auto_reply_loop(driver, all_rates)
     driver.quit()
+
 
