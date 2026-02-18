@@ -11,11 +11,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import google.generativeai as genai
 
-# === CONFIGURATION ===
 REPLY_LOG_FILE = "reply_log.json"
 GOOGLE_API_KEY = "AIzaSyB7FYh9SnzpcuzJ-cwNRBXBpzVekptL2zw"
-
-# === WHATSAPP BOT FUNCTIONS ===
 
 def choose_profile_path():
     print("Which WhatsApp account do you want to use?")
@@ -80,7 +77,6 @@ def get_today_messages(driver):
             pre = msg.get_attribute("data-pre-plain-text")
             if not pre:
                 continue
-            # Parse date
             try:
                 timestamp_str = pre.split(",")[1].split("]")[0].strip()
                 msg_date = datetime.strptime(timestamp_str, "%d/%m/%Y").date()
@@ -88,14 +84,12 @@ def get_today_messages(driver):
                     continue
             except Exception:
                 continue
-            # Expand "read more" if present
             try:
                 read_more = msg.find_element(By.CLASS_NAME, 'read-more-button')
                 driver.execute_script("arguments[0].click();", read_more)
                 time.sleep(0.2)
             except:
                 pass
-            # Extract message text
             text_elems = msg.find_elements(By.XPATH, './/span[contains(@class,"selectable-text")]')
             text = "\n".join([t.text.strip() for t in text_elems if t.text.strip()])
             if text:
@@ -146,7 +140,6 @@ def collect_all_rates(driver, group_names):
             print(f"❌ Could not find any messages for group: {group}")
             all_rates[group] = []
             continue
-        # Scroll up to load more messages
         for _ in range(5):
             try:
                 msg_elem = driver.find_element(By.XPATH, '//div[@data-pre-plain-text]')
@@ -163,7 +156,6 @@ def collect_all_rates(driver, group_names):
 
 def reply_with_all_rates(driver, all_rates, query):
     answer = ask_gemini_for_rate(query, all_rates)
-    # Prevent duplicate reply
     try:
         outgoing_msgs = driver.find_elements(By.XPATH, '//div[contains(@class,"message-out")]//span[contains(@class,"selectable-text")]')
         last_sent = outgoing_msgs[-1].text.strip() if outgoing_msgs else ""
@@ -176,12 +168,10 @@ def reply_with_all_rates(driver, all_rates, query):
 
 def get_unread_chats(driver):
     unread_chats = []
-    # This XPath matches any chat with a green dot (unread count)
     chat_elems = driver.find_elements(By.XPATH, "//div[contains(@class, '_ak8i')]//span[@data-testid='icon-unread-count']")
     print(f"Found {len(chat_elems)} unread indicators in chat list.")
     for elem in chat_elems:
         try:
-            # Go up to the chat row
             chat_row = elem.find_element(By.XPATH, './../..')
             chat_name_elem = chat_row.find_element(By.XPATH, ".//span[@dir='auto' and @title]")
             chat_name = chat_name_elem.get_attribute("title")
@@ -259,11 +249,9 @@ def auto_reply_loop(driver, all_rates):
                 save_reply_log(reply_log)
         time.sleep(10)
 
-# === GEMINI AI SETUP ===
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-# === MAIN EXECUTION ===
 if __name__ == "__main__":
     profile_path = choose_profile_path()
     os.makedirs(profile_path, exist_ok=True)
@@ -276,3 +264,4 @@ if __name__ == "__main__":
     all_rates = collect_all_rates(driver, recieves)
     auto_reply_loop(driver, all_rates)
     driver.quit()
+
